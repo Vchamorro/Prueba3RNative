@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -61,7 +62,34 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $id = $product->id;
+        $fields=$request->validate([
+            'name' => 'required',
+            'image' => 'required',
+            'description' => 'required',
+            'price' => 'required',
+            'quantity' => 'required',
+            'status' => 'required'
+        ]);
+        try {
+            DB::beginTransaction();
+            $product= Product::where('id', $id)->update([
+                'name' => $fields['name'],
+                'image' => $fields['image'],
+                'description' => $fields['description'],
+                'price' => $fields['price'],
+                'quantity' => $fields['quantity'],
+                'status' => $fields['status']
+            ]);
+
+            DB::commit();
+            return response()->json($product, 200);
+        }catch (\Exception $exception)
+        {
+            return response()->json([
+                'message' => $exception->getMessage()
+            ], 500);
+        }
     }
 
     /**
